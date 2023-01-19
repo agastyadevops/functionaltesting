@@ -1,0 +1,98 @@
+pipeline
+{
+    agent any
+    stages
+    {
+        stage('continuousDownload')
+        {
+            steps
+            {
+		        script
+		        {
+		            try
+		            {	
+		                git 'https://github.com/agastyadevops/maven.git'	
+		            }
+		            catch(Exception e1)		
+		            {
+		                mail bcc: '', body: 'Java code failed at first stage', cc: '', from: '', replyTo: '', subject: 'Code Fail', to: 'agastyadevops@gmail.com'
+ 		            exit(1)
+		            }
+		        }
+            }       
+	    }
+	    stage('continousbuild')            
+		{
+		    steps
+		    {
+		        script
+		        {
+		            try
+		            {
+		                sh 'mvn package'
+		            }    
+		            catch(Exception e2)
+		            {
+		                mail bcc: '', body: 'artifact failed at 2nd stage', cc: '', from: '', replyTo: '', subject: 'artifact failed', to: 'avnmurali26@gmail.com'
+		            exit(2)
+		            }
+		        }
+		    }
+        }
+        stage('continousdeployment')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        deploy adapters: [tomcat9(credentialsId: 'a6f288cf-2d40-42ce-89e1-d1d4f6e08cfd', path: '', url: 'http://172.31.10.60:8080')], contextPath: 'testapp', war: '**/*.war'
+                    }
+                    catch(exceptione3)
+                    {
+                        mail bcc: '', body: 'deployment failed at 3rd stage', cc: '', from: '', replyTo: '', subject: 'deployment failed', to: 'agastyadevops@gmail.com'
+                    extit(3)                       
+                    }
+                }
+            }    
+        }
+        stage('continoustesting')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        git 'https://github.com/intelliqittrainings/FunctionalTesting.git'
+                    }
+                    catch(Exception4)
+                    {
+                        mail bcc: '', body: 'Failed at  Testing statge4', cc: '', from: '', replyTo: '', subject: 'Failed at Testing', to: 'agastyadevops@gmail.com'
+                        sh 'java -jar /var/lib/jenkins/workspace/Declerativepipeline2/testing.jar'
+                        exit(4)
+                    }
+                }
+            }
+        }
+        stage('continousdelevery')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        deploy adapters: [tomcat9(credentialsId: 'a6f288cf-2d40-42ce-89e1-d1d4f6e08cfd', path: '', url: 'http://172.31.11.213:8080')], contextPath: 'prodapp', war: '**/*.war'
+                    }
+                    catch(Exception5)
+                    {
+                        mail bcc: '', body: 'Failed at delivery statge5', cc: '', from: '', replyTo: '', subject: 'Failed at delivery', to: 'avnmurali26@gmail.com'    
+                        exit(5)
+                    } 
+                }    
+            }
+        }  
+    }    
+}
